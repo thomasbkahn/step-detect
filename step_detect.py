@@ -2,9 +2,9 @@
 Thomas Kahn
 thomas.b.kahn@gmail.com
 """
-import numpy as np
 from math import sqrt
 import multiprocessing as mp
+import numpy as np
 
 
 def t_scan(L, window = 1e3):
@@ -140,7 +140,6 @@ def mz_fwt(x, n=2):
     return prod
 
 
-
 def _insert_zeros(x, n):
     """
     Helper function for mz_fwt. Splits input array and adds n zeros
@@ -151,7 +150,6 @@ def _insert_zeros(x, n):
     indices      = range(0, newlen-n, n+1)
     out[indices] = x
     return out
-
 
 
 def find_steps(array, threshold):
@@ -186,7 +184,6 @@ def find_steps(array, threshold):
     for upi, dni in zip(cross_ups,cross_dns):
         steps.append(np.argmax(array[upi:dni]) + upi)
     return steps
-
 
 
 def get_step_sizes(array, indices, window=1000):
