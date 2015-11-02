@@ -46,7 +46,11 @@ def t_scan(L, window = 1e3):
     for index, row in results:
         t_stat[index] = row
     
-    t_stat = np.append(np.zeros(window), np.append(t_stat.transpose(), np.zeros(size % window))) # calling np.append with no axis causes raveling
+    t_stat  = np.concatenate((
+        np.zeros(window),
+        t_stat.transpose().ravel(order='C'),
+        np.zeros(size % window)
+    ))
 
     return t_stat
 
@@ -117,8 +121,8 @@ def mz_fwt(x, n=2):
         Gn.append(q+1)
         Hn.append(3*q+1)
 
-    S    = np.append(x[::-1], x)
-    S    = np.append(S, x[::-1])
+    S    = np.concatenate((x[::-1], x))
+    S    = np.concatenate((S, x[::-1]))
     prod = np.ones(N_pnts)
     for j in range(n):
         n_zeros = 2**j - 1
@@ -127,10 +131,12 @@ def mz_fwt(x, n=2):
         current = (1.0/lambda_j[j])*np.convolve(S,Gz)
         current = current[N_pnts+Gn[j]:2*N_pnts+Gn[j]]
         prod    *= current
+        if j == n-1:
+            break
         S_new   = np.convolve(S, Hz)
         S_new   = S_new[N_pnts+Hn[j]:2*N_pnts+Hn[j]]
-        S       = np.append(S_new[::-1], S_new)
-        S       = np.append(S, S_new[::-1])
+        S       = np.concatenate((S_new[::-1], S_new))
+        S       = np.concatenate((S, S_new[::-1]))
     return prod
 
 
