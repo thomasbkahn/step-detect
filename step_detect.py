@@ -42,7 +42,8 @@ def t_scan(L, window = 1e3):
     pool    = mp.Pool(processes = mp.cpu_count() - 1)
     results = [pool.apply_async(_t_scan_drone, args=(L, n_cols, frame, window)) for frame in frames]
     results = [r.get() for r in results]
-    
+    pool.close()
+
     for index, row in results:
         t_stat[index] = row
     
