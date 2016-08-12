@@ -42,12 +42,16 @@ def t_scan(L, window = 1e3, num_workers = -1):
     n_cols  = (size / window) - 1
     
     t_stat  = np.zeros((window, n_cols))
-    if num_workers == -1:
-        num_workers = mp.cpu_count() - 1
-    pool    = mp.Pool(processes = num_workers)
-    results = [pool.apply_async(_t_scan_drone, args=(L, n_cols, frame, window)) for frame in frames]
-    results = [r.get() for r in results]
-    pool.close()
+
+    if num_workers == 1:
+        results = [_t_scan_drone(L, n_cols, frame, window) for frame in frames]
+    else:
+        if num_workers == -1:
+            num_workers = mp.cpu_count() - 1
+        pool    = mp.Pool(processes = num_workers)
+        results = [pool.apply_async(_t_scan_drone, args=(L, n_cols, frame, window)) for frame in frames]
+        results = [r.get() for r in results]
+        pool.close()
 
     for index, row in results:
         t_stat[index] = row
