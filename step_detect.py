@@ -39,7 +39,7 @@ def t_scan(L, window = 1e3):
     size    = L.size
     window  = int(window)
     frames  = list(range(window))
-    n_cols  = (size / window) - 1
+    n_cols  = (size // window) - 1
     
     t_stat  = np.zeros((window, n_cols))
     pool    = mp.Pool(processes = mp.cpu_count() - 1)
@@ -78,7 +78,7 @@ def _t_scan_drone(L, n_cols, frame, window=1e3):
         a = L[i:i+window]
         a_mean = a.mean()
         a_var  = a.var()
-        output[i / window - 1] = root_n * (a_mean - b_mean) / sqrt(a_var + b_var)
+        output[i // window - 1] = root_n * (a_mean - b_mean) / sqrt(a_var + b_var)
         b_mean, b_var = a_mean, a_var
 
     return frame, output
