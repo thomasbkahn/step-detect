@@ -2,9 +2,12 @@
 Thomas Kahn
 thomas.b.kahn@gmail.com
 """
+from __future__ import absolute_import
 from math import sqrt
 import multiprocessing as mp
 import numpy as np
+from six.moves import range
+from six.moves import zip
 
 
 def t_scan(L, window = 1e3):
@@ -35,7 +38,7 @@ def t_scan(L, window = 1e3):
     """
     size    = L.size
     window  = int(window)
-    frames  = range(window)
+    frames  = list(range(window))
     n_cols  = (size / window) - 1
     
     t_stat  = np.zeros((window, n_cols))
@@ -148,7 +151,7 @@ def _insert_zeros(x, n):
     """
     newlen       = (n+1)*x.size
     out          = np.zeros(newlen)
-    indices      = range(0, newlen-n, n+1)
+    indices      = list(range(0, newlen-n, n+1))
     out[indices] = x
     return out
 
