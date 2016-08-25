@@ -7,7 +7,7 @@ import multiprocessing as mp
 import numpy as np
 
 
-def t_scan(L, window = 1e3):
+def t_scan(L, window = 1e3, num_workers = -1):
     """
     Computes t statistic for i to i+window points versus i-window to i
     points for each point i in input array. Uses multiple processes to
@@ -23,6 +23,9 @@ def t_scan(L, window = 1e3):
     window : int / float
         Number of points that comprise the windows of data that are
         compared
+    num_workers : int
+        Number of worker processes for multithreaded t_stat computation
+        Defult value uses num_cpu - 1 workers
 
 
     Returns
@@ -39,10 +42,16 @@ def t_scan(L, window = 1e3):
     n_cols  = (size / window) - 1
     
     t_stat  = np.zeros((window, n_cols))
-    pool    = mp.Pool(processes = mp.cpu_count() - 1)
-    results = [pool.apply_async(_t_scan_drone, args=(L, n_cols, frame, window)) for frame in frames]
-    results = [r.get() for r in results]
-    pool.close()
+
+    if num_workers == 1:
+        results = [_t_scan_drone(L, n_cols, frame, window) for frame in frames]
+    else:
+        if num_workers == -1:
+            num_workers = mp.cpu_count() - 1
+        pool    = mp.Pool(processes = num_workers)
+        results = [pool.apply_async(_t_scan_drone, args=(L, n_cols, frame, window)) for frame in frames]
+        results = [r.get() for r in results]
+        pool.close()
 
     for index, row in results:
         t_stat[index] = row
