@@ -200,7 +200,7 @@ def find_steps(array, threshold):
     cross_ups = np.where(ap_dif == 1)[0]
     cross_dns = np.where(ap_dif == -1)[0]
     for upi, dni in zip(cross_ups,cross_dns):
-        steps.append(np.argmax(array_abs[upi:dni]) + upi)
+        steps.append(np.argmax(array_abs[upi:dni+1]) + upi)
     return steps
 
 
