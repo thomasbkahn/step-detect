@@ -188,14 +188,19 @@ def find_steps(array, threshold):
         List of indices of the detected steps
 
     """
-    steps        = []
-    array        = np.abs(array)
-    above_points = np.where(array > threshold, 1, 0)
-    ap_dif       = np.diff(above_points)
-    cross_ups    = np.where(ap_dif == 1)[0]
-    cross_dns    = np.where(ap_dif == -1)[0]
+    steps = []
+    array_abs = np.abs(array)
+    above_points = np.where(array_abs > threshold, 1, 0)
+    ap_dif = np.diff(above_points)
+    pos_to_neg_diff = np.diff(np.where(array > threshold, 1, 0) + np.where(array < -threshold, -1, 0))
+    pos_to_neg_skips = np.where(np.abs(pos_to_neg_diff) == 2)[0]
+    for ix in pos_to_neg_skips:
+        ap_dif[ix - 1] = -1
+        ap_dif[ix] = 1
+    cross_ups = np.where(ap_dif == 1)[0]
+    cross_dns = np.where(ap_dif == -1)[0]
     for upi, dni in zip(cross_ups,cross_dns):
-        steps.append(np.argmax(array[upi:dni]) + upi)
+        steps.append(np.argmax(array_abs[upi:dni]) + upi)
     return steps
 
 
