@@ -56,6 +56,8 @@ class TestStepDetectFunctions(unittest.TestCase):
                                  3445.91259433, 3449.58999, 3538.07678893, 5071.54845559,
                                  5023.52196979, 5008.00727191, 4997.53409712, 4973.39290886,
                                  4944.09166901, 4943.28154164])
+        self.series3 = np.tile(self.series3, 2)
+        self.series3[int(len(self.series3) / 2):] += 4500
         self.series3_filtered = gaussian_filter1d(self.series3.flatten(), 2, order=1)
 
     def test_find_steps(self):
@@ -66,3 +68,5 @@ class TestStepDetectFunctions(unittest.TestCase):
                             "jump location {} more than 2 off from truth for test series 1".format(steps[i]))
         steps = step_detect.find_steps(self.series2_filtered, 10)
         self.assertTrue(len(steps) == 2, "length of jumps for test series2 ({} != 2)".format(len(steps)))
+        steps = step_detect.find_steps(self.series3_filtered, 10)
+        self.assertTrue(len(steps) == 5, "incorrect number of jumps for test series 3 ({} != 5)".format(len(steps)))

@@ -199,8 +199,19 @@ def find_steps(array, threshold):
         ap_dif[ix] = 1
     cross_ups = np.where(ap_dif == 1)[0]
     cross_dns = np.where(ap_dif == -1)[0]
+    first_deriv_zero_crossings = np.where(np.diff(np.sign(np.diff(array))))[0]
     for upi, dni in zip(cross_ups,cross_dns):
-        steps.append(np.argmax(array_abs[upi:dni+1]) + upi)
+        zero_crossings_between_upi_dni = first_deriv_zero_crossings[
+            (first_deriv_zero_crossings > upi) & (first_deriv_zero_crossings < dni)]
+        deriv_zero_crossings_cnt = len(zero_crossings_between_upi_dni)
+        if deriv_zero_crossings_cnt > 1:
+            for i, cross in enumerate(zero_crossings_between_upi_dni):
+                if i % 2 == 1:
+                    steps.append(np.argmax(array_abs[upi:cross + 1]) + upi)
+                    upi = cross
+            steps.append(np.argmax(array_abs[upi:cross + 1]) + upi)
+        else:
+            steps.append(np.argmax(array_abs[upi:dni+1]) + upi)
     return steps
 
 
