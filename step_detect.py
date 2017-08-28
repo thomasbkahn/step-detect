@@ -188,24 +188,46 @@ def find_steps(array, threshold):
         List of indices of the detected steps
 
     """
-    steps = []
+    steps = list()
+    # First create array ap_dif which is 1 where data in series crossed from below threshold to above threshold
+    # (upward), -1 where it crosses downward, and 0 elsewhere.
     array_abs = np.abs(array)
     above_points = np.where(array_abs > threshold, 1, 0)
     ap_dif = np.diff(above_points)
+
+    # To handle the edge case where data skips from being greater than the threshold on one side (positive or negative)
+    # to the opposite side without any transition points, manually insert -1 and 1 values into ap_diff so that these
+    # transitions will be accounted for.
     pos_to_neg_diff = np.diff(np.where(array > threshold, 1, 0) + np.where(array < -threshold, -1, 0))
     pos_to_neg_skips = np.where(np.abs(pos_to_neg_diff) == 2)[0]
     for ix in pos_to_neg_skips:
-        ap_dif[ix - 1] = -1
-        ap_dif[ix] = 1
+        if ap_dif[ix - 1] != 1:  # only change if there's not an overlapping jump to avoid making ap_dif inconsistent
+            ap_dif[ix - 1] = -1
+            ap_dif[ix] = 1
+
+
+    # Compute list of indices in series where the differences / "first derivative" cross 0.
+    # This allows us to handle the edge case where multiple step changes occur in the source data while series remains
+    # above the threshold the entire time (otherwise only one step would be returned for this region). By checking
+    # the number of zero crossings that lie within the region bounded by the two threshold crossings
+    # we can iterate through the odd zero crossing indices and return the maximum value of series between each
+    # subset, each representing a different step event. deriv_zero_crossings_cnt should normally be 1, however if there
+    # are two step changes while above threshold it should be 3, three step changes -> 5, and so on.
+
+    series_first_deriv_zero_crossings = np.where(np.diff(np.sign(np.diff(array))))[0]
     cross_ups = np.where(ap_dif == 1)[0]
     cross_dns = np.where(ap_dif == -1)[0]
-    first_deriv_zero_crossings = np.where(np.diff(np.sign(np.diff(array))))[0]
-    for upi, dni in zip(cross_ups,cross_dns):
-        zero_crossings_between_upi_dni = first_deriv_zero_crossings[
-            (first_deriv_zero_crossings > upi) & (first_deriv_zero_crossings < dni)]
-        deriv_zero_crossings_cnt = len(zero_crossings_between_upi_dni)
-        if deriv_zero_crossings_cnt > 1:
-            for i, cross in enumerate(zero_crossings_between_upi_dni):
+
+    # In case the first identified threshold crossing is down instead of an up, add 0 to array of ups to pair it up
+    if len(cross_ups) > 0 and len(cross_dns) > 0 and cross_ups[0] > cross_dns[0]:
+        cross_ups = np.insert(cross_ups, 0, 0)
+
+    for upi, dni in zip(cross_ups, cross_dns):
+        deriv_zero_crossings = series_first_deriv_zero_crossings[
+            (series_first_deriv_zero_crossings > upi) & (series_first_deriv_zero_crossings < dni)]
+        deriv_zero_crossings_cnt = len(deriv_zero_crossings)
+        if deriv_zero_crossings_cnt % 2 == 1:
+            for i, cross in enumerate(deriv_zero_crossings):
                 if i % 2 == 1:
                     steps.append(np.argmax(array_abs[upi:cross + 1]) + upi)
                     upi = cross
